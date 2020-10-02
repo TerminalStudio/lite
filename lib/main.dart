@@ -128,14 +128,16 @@ class _MyHomePageState extends State<MyHomePage> {
             terminal.refresh();
           }
         },
-        child: TerminalView(
-          terminal: terminal,
-          onResize: (w, h) {
-            pty.resize(w,h);
-          },
-          focusNode: focusNode,
-          style: TerminalStyle(
-            fontSize: 12,
+        child: CupertinoScrollbar(
+          child: TerminalView(
+            terminal: terminal,
+            onResize: (w, h) {
+              pty.resize(w, h);
+            },
+            focusNode: focusNode,
+            style: TerminalStyle(
+              fontSize: 12,
+            ),
           ),
         ),
       ),

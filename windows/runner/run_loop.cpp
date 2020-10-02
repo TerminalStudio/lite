@@ -1,6 +1,9 @@
 #include "run_loop.h"
 
-#include <windows.h>
+#include <Windows.h>
+// Don't stomp std::min/std::max
+#undef max
+#undef min
 
 #include <algorithm>
 
@@ -44,19 +47,20 @@ void RunLoop::Run() {
 }
 
 void RunLoop::RegisterFlutterInstance(
-    flutter::FlutterEngine* flutter_instance) {
+    flutter::FlutterViewController* flutter_instance) {
   flutter_instances_.insert(flutter_instance);
 }
 
 void RunLoop::UnregisterFlutterInstance(
-    flutter::FlutterEngine* flutter_instance) {
+    flutter::FlutterViewController* flutter_instance) {
   flutter_instances_.erase(flutter_instance);
 }
 
 RunLoop::TimePoint RunLoop::ProcessFlutterMessages() {
   TimePoint next_event_time = TimePoint::max();
-  for (auto instance : flutter_instances_) {
-    std::chrono::nanoseconds wait_duration = instance->ProcessMessages();
+  for (auto flutter_controller : flutter_instances_) {
+    std::chrono::nanoseconds wait_duration =
+        flutter_controller->ProcessMessages();
     if (wait_duration != std::chrono::nanoseconds::max()) {
       next_event_time =
           std::min(next_event_time, TimePoint::clock::now() + wait_duration);
