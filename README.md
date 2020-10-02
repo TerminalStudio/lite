@@ -1,6 +1,6 @@
 ## Terminal Lite
 
-Experimental terminal emulation application written in Flutter.
+Experimental terminal emulator application written in Flutter.
 
 ## Build
 
