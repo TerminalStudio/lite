@@ -10,17 +10,37 @@ struct _MyApplication {
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
+
+static void on_close()
+{
+  exit(0);
+}
+
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
-  GtkWindow* window =
+  // GtkWindow* window =
+  //     GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
+  // GtkHeaderBar *header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
+  // gtk_widget_show(GTK_WIDGET(header_bar));
+  // gtk_header_bar_set_title(header_bar, "lite");
+  // gtk_header_bar_set_show_close_button(header_bar, TRUE);
+  // gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
+  // gtk_window_set_default_size(window, 1280, 720);
+  // gtk_widget_show(GTK_WIDGET(window));
+
+  g_object_set(gtk_settings_get_default(),
+               "gtk-application-prefer-dark-theme", TRUE,
+               NULL);
+
+  GtkWindow *window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
-  GtkHeaderBar *header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
-  gtk_widget_show(GTK_WIDGET(header_bar));
-  gtk_header_bar_set_title(header_bar, "lite");
-  gtk_header_bar_set_show_close_button(header_bar, TRUE);
-  gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
+
+  g_signal_connect(window, "delete_event", G_CALLBACK(on_close), NULL);
+
+  gtk_window_set_title(window, "Terminal Lite");
   gtk_window_set_default_size(window, 1280, 720);
   gtk_widget_show(GTK_WIDGET(window));
+
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
 
