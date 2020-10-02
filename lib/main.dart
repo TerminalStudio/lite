@@ -95,9 +95,17 @@ class _MyHomePageState extends State<MyHomePage> {
       platform: getPlatform(),
     );
 
+    if (!Platform.isWindows) {
+      Directory.current = Platform.environment['HOME'] ?? '/';
+    }
+
     terminal.debug.enable();
     final shell = getShell();
-    final proc = pty.exec(shell, arguments: []);
+    final proc = pty.exec(
+      shell,
+      arguments: ['-l'],
+      environment: ['TERM=xterm-256color'],
+    );
 
     final focusNode = FocusNode();
 
