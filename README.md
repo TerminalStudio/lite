@@ -31,7 +31,7 @@ Experimental cross-platform terminal emulator application written in Flutter.
 
 ## Prebuilt binaries
 
-Prebuilt binaries are available for Windows Linux, and MacOS on the [releases](https://github.com/TerminalStudio/lite/releases) page.
+Prebuilt binaries are available for Windows, Linux, and MacOS on the [releases](https://github.com/TerminalStudio/lite/releases) page.
 
 ## Build
 
@@ -52,6 +52,8 @@ flutter pub get
 flutter pub upgrade
 flutter run --release
 ```
+
+> Windows build may fail when using flutter 1.23.0+, to resolve this issue, delete the `windows` folder then run `flutter create .`, or simply `git checkout flutter_1.23.0`
 
 ## Known issues
 
