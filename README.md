@@ -40,6 +40,9 @@ Prebuilt binaries are available for Windows, Linux, and MacOS on the [releases](
 Make sure Flutter desktop support is enabled:
 
 ```
+flutter channel dev
+// or flutter channel master
+
 flutter config --enable-windows-desktop
 flutter config --enable-macos-desktop
 flutter config --enable-linux-desktop
