@@ -127,12 +127,6 @@ class _MyHomePageState extends State<MyHomePage> {
       controller: tab,
       title: 'Terminal',
       content: GestureDetector(
-        onLongPress: () {
-          final dylib = DynamicLibrary.process();
-          final hola = dylib.lookupFunction<Int32 Function(), int Function()>('hola');
-          print('hola()');
-          print(hola());
-        },
         onSecondaryTapDown: (details) async {
           final clipboardData = await Clipboard.getData('text/plain');
           final hasSelection = !terminal.selection.isEmpty;
