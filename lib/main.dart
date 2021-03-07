@@ -1,5 +1,7 @@
+import 'dart:ffi';
 import 'dart:io';
 
+import 'package:context_menu_macos/context_menu_macos.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -37,7 +39,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key}) : super(key: key);
+  MyHomePage({Key? key}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -61,9 +63,11 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Container(
-          color: Color(0xFF3A3D3F),
+          // color: Color(0xFF3A3D3F),
+          color: Colors.transparent,
           child: TabsView(
             controller: tabs,
             actions: [
@@ -87,7 +91,19 @@ class _MyHomePageState extends State<MyHomePage> {
   Tab buildTab() {
     final tab = TabController();
 
-    final pty = Pty();
+    if (!Platform.isWindows) {
+      Directory.current = Platform.environment['HOME'] ?? '/';
+    }
+
+    // terminal.debug.enable();
+
+    final shell = getShell();
+
+    final pty = PseudoTerminal.start(
+      shell,
+      ['-l'],
+      environment: {'TERM': 'xterm-256color'},
+    );
 
     final terminal = Terminal(
       onTitleChange: tab.setTitle,
@@ -95,27 +111,15 @@ class _MyHomePageState extends State<MyHomePage> {
       platform: getPlatform(),
     );
 
-    if (!Platform.isWindows) {
-      Directory.current = Platform.environment['HOME'] ?? '/';
-    }
-
-    terminal.debug.enable();
-    final shell = getShell();
-    final proc = pty.exec(
-      shell,
-      arguments: ['-l'],
-      environment: ['TERM=xterm-256color'],
-    );
+    pty.out.listen(terminal.write);
 
     final focusNode = FocusNode();
 
-    SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+    SchedulerBinding.instance!.addPostFrameCallback((timeStamp) {
       focusNode.requestFocus();
     });
 
-    readToTerminal(pty, terminal);
-
-    proc.wait().then((_) {
+    pty.exitCode.then((_) {
       tab.requestClose();
     });
 
@@ -123,28 +127,80 @@ class _MyHomePageState extends State<MyHomePage> {
       controller: tab,
       title: 'Terminal',
       content: GestureDetector(
-        onSecondaryTap: () async {
-          if (terminal.selection.isEmpty) {
-            final data = await Clipboard.getData('text/plain');
-            terminal.paste(data.text);
-            terminal.debug.onMsg('paste ┤${data.text}├');
-          } else {
-            final text = terminal.getSelectedText();
-            Clipboard.setData(ClipboardData(text: text));
-            terminal.selection.clear();
-            terminal.debug.onMsg('copy ┤$text├');
-            terminal.refresh();
-          }
+        onLongPress: () {
+          final dylib = DynamicLibrary.process();
+          final hola = dylib.lookupFunction<Int32 Function(), int Function()>('hola');
+          print('hola()');
+          print(hola());
+        },
+        onSecondaryTapDown: (details) async {
+          final clipboardData = await Clipboard.getData('text/plain');
+          final hasSelection = !terminal.selection.isEmpty;
+          final clipboardHasData = clipboardData?.text?.isNotEmpty == true;
+
+          showMacosContextMenu(
+            context: context,
+            globalPosition: details.globalPosition,
+            children: [
+              MacosContextMenuItem(
+                content: Text('Copy'),
+                trailing: Text('⌘ C'),
+                enabled: hasSelection,
+                onTap: () {
+                  final text = terminal.getSelectedText();
+                  Clipboard.setData(ClipboardData(text: text));
+                  terminal.selection.clear();
+                  terminal.debug.onMsg('copy ┤$text├');
+                  terminal.refresh();
+                  Navigator.of(context).pop();
+                },
+              ),
+              MacosContextMenuItem(
+                content: Text('Paste'),
+                trailing: Text('⌘ V'),
+                enabled: clipboardHasData,
+                onTap: () {
+                  terminal.paste(clipboardData!.text!);
+                  terminal.debug.onMsg('paste ┤${clipboardData.text}├');
+                  Navigator.of(context).pop();
+                },
+              ),
+              MacosContextMenuItem(
+                content: Text('Select All'),
+                trailing: Text('⌘ A'),
+                onTap: () {
+                  print('Select All is currently not implemented.');
+                  Navigator.of(context).pop();
+                },
+              ),
+              MacosContextMenuDivider(),
+              MacosContextMenuItem(
+                content: Text('Clear'),
+                trailing: Text('⌘ K'),
+                onTap: () {
+                  print('Clear is currently not implemented.');
+                  Navigator.of(context).pop();
+                },
+              ),
+              MacosContextMenuDivider(),
+              MacosContextMenuItem(
+                content: Text('Kill'),
+                onTap: () {
+                  pty.kill();
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
         },
         child: CupertinoScrollbar(
           child: TerminalView(
             terminal: terminal,
-            onResize: (w, h) {
-              pty.resize(w, h);
-            },
+            onResize: pty.resize,
             focusNode: focusNode,
+            opacity: 0.85,
             style: TerminalStyle(
-              fontSize: 12,
+              fontSize: 15,
             ),
           ),
         ),
@@ -153,26 +209,14 @@ class _MyHomePageState extends State<MyHomePage> {
         focusNode.requestFocus();
       },
       onDrop: () {
-        SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+        SchedulerBinding.instance!.addPostFrameCallback((timeStamp) {
           focusNode.requestFocus();
         });
       },
       onClose: () {
-        proc.kill();
+        pty.kill();
       },
     );
-  }
-
-  void readToTerminal(Pty pty, Terminal terminal) async {
-    while (true) {
-      final data = await pty.read();
-
-      if (data == null) {
-        break;
-      }
-
-      terminal.write(data);
-    }
   }
 
   String getShell() {
@@ -186,9 +230,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   PlatformBehavior getPlatform() {
     if (Platform.isWindows) {
-      return PlatformBehavior.windows;
+      return PlatformBehaviors.windows;
     }
 
-    return PlatformBehavior.unix;
+    return PlatformBehaviors.unix;
   }
 }
