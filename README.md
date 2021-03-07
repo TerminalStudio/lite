@@ -55,8 +55,6 @@ flutter run --release
 
 For the underlying backend-agnostic terminal emulator **widget**, see [xterm.dart](https://github.com/TerminalStudio/xterm.dart).
 
-> Windows build may fail when using flutter 1.23.0+, to resolve this issue, delete the `windows` folder then run `flutter create .`, or simply `git checkout flutter_1.23.0`
-
 
 ## Known issues
 
