@@ -35,14 +35,11 @@ Prebuilt binaries are available for Windows, Linux, and MacOS on the [releases](
 
 ## Build
 
-**Flutter 1.22.0+ is recommended to build Terminal Lite.**
+**Flutter 2.0.0+ is required to build Terminal Lite.**
 
 Make sure Flutter desktop support is enabled:
 
 ```
-flutter channel dev
-// or flutter channel master
-
 flutter config --enable-windows-desktop
 flutter config --enable-macos-desktop
 flutter config --enable-linux-desktop
@@ -63,8 +60,8 @@ For the underlying backend-agnostic terminal emulator **widget**, see [xterm.dar
 
 ## Known issues
 
-- [Pty](https://github.com/TerminalStudio/pty) may not work in **debug mode**.
-- Some special characters may not render in **MacOS**, maybe caused by [fontFamilyFallback](https://github.com/TerminalStudio/xterm.dart/blob/2800cfba0e1a945b3588e5658cf0801684c91027/lib/theme/terminal_style.dart#L2)?
+- [Pty](https://github.com/TerminalStudio/pty) may not work in **debug mode** on windows.
+- ~~Some special characters may not render in **MacOS**, maybe caused by [fontFamilyFallback](https://github.com/TerminalStudio/xterm.dart/blob/2800cfba0e1a945b3588e5658cf0801684c91027/lib/theme/terminal_style.dart#L2)?~~
 - When multiple tabs are opened, focus may not move between those tabs correctly.
 
 ## Features and bugs
