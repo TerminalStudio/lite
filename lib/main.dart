@@ -48,6 +48,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final tabs = TabsController();
   final group = TabGroupController();
+  var tabCount = 0;
 
   @override
   void initState() {
@@ -89,6 +90,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Tab buildTab() {
+    tabCount++;
+
     final tab = TabController();
 
     if (!Platform.isWindows) {
@@ -209,6 +212,12 @@ class _MyHomePageState extends State<MyHomePage> {
       },
       onClose: () {
         pty.kill();
+
+        tabCount--;
+
+        if (tabCount <= 0) {
+          exit(0);
+        }
       },
     );
   }
